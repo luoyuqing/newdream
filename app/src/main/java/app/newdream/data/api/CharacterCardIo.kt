@@ -4,8 +4,11 @@ import app.newdream.data.model.CharacterCard
 import app.newdream.data.model.CharacterCardV2
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 /**
  * Character Card I/O utilities for SillyTavern V1/V2 spec compatibility.
@@ -127,11 +130,11 @@ object CharacterCardIo {
             characterVersion = "1.0"
         )
         return json.encodeToString(
-            mapOf(
-                "spec" to "chara_card_v2",
-                "spec_version" to "2.0",
-                "data" to json.encodeToString(v2)
-            )
+            buildJsonObject {
+                put("spec", JsonPrimitive("chara_card_v2"))
+                put("spec_version", JsonPrimitive("2.0"))
+                put("data", JsonPrimitive(json.encodeToString(v2)))
+            }
         )
     }
 }

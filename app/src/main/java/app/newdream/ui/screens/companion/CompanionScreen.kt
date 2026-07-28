@@ -95,9 +95,9 @@ fun CompanionDetailScreen(companionId: String, onBack: () -> Unit) {
                     modifier = Modifier.fillMaxWidth().padding(12.dp).navigationBarsPadding(),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    AssistChip(onClick = { /* chat */ }, label = { Text("聊天") }, icon = { Icon(Icons.Default.Chat, null, Modifier.size(18.dp)) })
-                    AssistChip(onClick = { /* phone */ }, label = { Text("小手机") }, icon = { Icon(Icons.Default.Phone, null, Modifier.size(18.dp)) })
-                    AssistChip(onClick = { /* gift */ }, label = { Text("礼物") }, icon = { Icon(Icons.Default.CardGiftcard, null, Modifier.size(18.dp)) })
+                    AssistChip(onClick = { }, label = { Text("聊天") }, leadingIcon = { Icon(Icons.Default.Chat, contentDescription = null, modifier = Modifier.size(18.dp)) })
+                    AssistChip(onClick = { }, label = { Text("小手机") }, leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null, modifier = Modifier.size(18.dp)) })
+                    AssistChip(onClick = { }, label = { Text("礼物") }, leadingIcon = { Icon(Icons.Default.CardGiftcard, contentDescription = null, modifier = Modifier.size(18.dp)) })
                 }
             }
         }

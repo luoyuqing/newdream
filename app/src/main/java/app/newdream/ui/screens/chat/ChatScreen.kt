@@ -1,6 +1,7 @@
 package app.newdream.ui.screens.chat
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -456,6 +457,7 @@ private fun ChatBubble(message: ChatMessage) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CharacterCardItem(
     character: CharacterCard,

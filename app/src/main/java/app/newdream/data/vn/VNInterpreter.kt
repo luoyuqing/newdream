@@ -7,14 +7,14 @@ import app.newdream.data.model.*
  */
 data class VNRuntime(
     val script: VNScript,
-    val currentSceneIndex: Int = 0,
-    val currentDialogueIndex: Int = 0,
+    var currentSceneIndex: Int = 0,
+    var currentDialogueIndex: Int = 0,
     val variables: MutableMap<String, Int> = mutableMapOf(),
     val visitedScenes: MutableSet<Int> = mutableSetOf(),
     val history: MutableList<String> = mutableListOf(),
-    val isAwaitingChoice: Boolean = false,
-    val availableChoices: List<VNChoice> = emptyList(),
-    val finished: Boolean = false
+    var isAwaitingChoice: Boolean = false,
+    var availableChoices: List<VNChoice> = emptyList(),
+    var finished: Boolean = false
 ) {
     val currentScene: VNScene?
         get() = script.scenes.getOrNull(currentSceneIndex)
@@ -123,7 +123,7 @@ class VNInterpreter(private val script: VNScript) {
         if (nextScene.narration.isNotBlank()) {
             return VNStepResult.ShowNarration(nextScene.narration)
         }
-        return step(runtime)
+        return step(runtime) ?: VNStepResult.Finished
     }
 
     private fun applyAction(action: VNAction, runtime: VNRuntime) {
