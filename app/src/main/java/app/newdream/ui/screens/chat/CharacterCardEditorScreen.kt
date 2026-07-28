@@ -18,6 +18,7 @@ import app.newdream.data.api.CharacterCardIo
 import app.newdream.data.model.CharacterCard
 import app.newdream.ui.components.AppTopBar
 import java.util.UUID
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
