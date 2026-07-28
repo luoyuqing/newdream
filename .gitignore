@@ -4,6 +4,13 @@ build/
 app/build/
 local.properties
 
+# Keystore - NEVER commit these
+keystore.properties
+keystore/
+*.jks
+*.p12
+*.keystore
+
 # IDE
 .idea/
 *.iml
@@ -24,3 +31,7 @@ local.properties
 # OS
 Thumbs.db
 Desktop.ini
+
+# Helper scripts (created during initial setup)
+check_pat.py
+push_workflow.py
