@@ -209,12 +209,13 @@ fun VNPlayerScreen(scriptId: String, onBack: () -> Unit) {
 
     if (script == null || interpreter == null || runtime == null) {
         Scaffold(topBar = { AppTopBar(title = "剧本不存在", onBack = onBack) }) { padding ->
-            EmptyStateView(
-                modifier = Modifier.padding(padding),
-                icon = Icons.Default.ErrorOutline,
-                title = "找不到剧本",
-                subtitle = "剧本可能已被删除"
-            )
+            Box(modifier = Modifier.padding(padding)) {
+                EmptyStateView(
+                    icon = Icons.Default.ErrorOutline,
+                    title = "找不到剧本",
+                    subtitle = "剧本可能已被删除"
+                )
+            }
         }
         return
     }
