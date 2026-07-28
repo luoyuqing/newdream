@@ -409,6 +409,7 @@ private fun BookshelfItem(world: World, onClick: () -> Unit) {
 /**
  * Reader screen for a specific book/world.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReaderBookScreen(bookId: String, onBack: () -> Unit) {
     val settings = NewDreamApp.instance.settings
@@ -416,7 +417,7 @@ fun ReaderBookScreen(bookId: String, onBack: () -> Unit) {
     val worlds by settings.worlds.collectAsState(initial = emptyList())
     val world = worlds.firstOrNull { it.id == bookId }
     var currentChapterIndex by remember(world) {
-        val saved = world.chapters.indexOfFirst { it.index == 0 }
+        val saved = world?.chapters?.indexOfFirst { it.index == 0 } ?: 0
         mutableIntStateOf(saved.coerceAtLeast(0))
     }
     var showAIDialog by remember { mutableStateOf(false) }

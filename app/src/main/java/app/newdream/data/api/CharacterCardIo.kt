@@ -9,6 +9,9 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonObject
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.JsonElement
 
 /**
  * Character Card I/O utilities for SillyTavern V1/V2 spec compatibility.
@@ -129,11 +132,12 @@ object CharacterCardIo {
             creatorNotes = card.creatorNotes,
             characterVersion = "1.0"
         )
-        return json.encodeToString(
+        val v2Json: JsonElement = json.encodeToJsonElement(CharacterCardV2.serializer(), v2)
+        return json.encodeToString(JsonObject.serializer(),
             buildJsonObject {
                 put("spec", JsonPrimitive("chara_card_v2"))
                 put("spec_version", JsonPrimitive("2.0"))
-                put("data", JsonPrimitive(json.encodeToString(v2)))
+                put("data", v2Json)
             }
         )
     }
