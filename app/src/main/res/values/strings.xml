@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">NewDream</string>
+    <string name="tab_home">首页</string>
+    <string name="tab_reader">阅读</string>
+    <string name="tab_chat">角色</string>
+    <string name="tab_companion">伴侣</string>
+    <string name="tab_settings">设置</string>
+    <string name="vn_mode">VN剧场</string>
+    <string name="agent_workbench">智能体</string>
+</resources>
