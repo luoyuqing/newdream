@@ -3,6 +3,7 @@ package app.newdream.ui.screens.chat
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -33,7 +34,10 @@ import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatListScreen(onNavigateToChat: (String) -> Unit) {
+fun ChatListScreen(
+    onNavigateToChat: (String) -> Unit,
+    onNavigateToEditor: (String?) -> Unit = {}
+) {
     val scope = rememberCoroutineScope()
     val settings = NewDreamApp.instance.settings
     val characters by settings.characters.collectAsState(initial = emptyList())
@@ -43,7 +47,7 @@ fun ChatListScreen(onNavigateToChat: (String) -> Unit) {
         topBar = { AppTopBar(title = "角色聊天") },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { /* TODO: show character selector */ },
+                onClick = { onNavigateToEditor(null) },
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
                 Icon(Icons.Default.Add, contentDescription = "新建聊天", tint = MaterialTheme.colorScheme.onPrimary)
@@ -54,9 +58,9 @@ fun ChatListScreen(onNavigateToChat: (String) -> Unit) {
             EmptyStateView(
                 icon = Icons.Default.Forum,
                 title = "还没有角色",
-                subtitle = "导入一张SillyTavern兼容的角色卡开始聊天",
-                actionLabel = "导入角色卡",
-                onAction = { /* TODO: import card */ }
+                subtitle = "创建或导入一张SillyTavern兼容的角色卡开始聊天",
+                actionLabel = "新建角色",
+                onAction = { onNavigateToEditor(null) }
             )
         } else {
             LazyColumn(
@@ -64,12 +68,36 @@ fun ChatListScreen(onNavigateToChat: (String) -> Unit) {
                     .fillMaxSize()
                     .padding(padding)
             ) {
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { onNavigateToEditor(null) },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null)
+                            Spacer(Modifier.width(4.dp))
+                            Text("新建")
+                        }
+                        OutlinedButton(
+                            onClick = { onNavigateToEditor(characters.firstOrNull()?.id) },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.Edit, contentDescription = null)
+                            Spacer(Modifier.width(4.dp))
+                            Text("管理")
+                        }
+                    }
+                }
                 items(characters) { character ->
                     val session = sessions.find { it.characterId == character.id }
                     CharacterCardItem(
                         character = character,
                         lastMessage = session?.messages?.lastOrNull()?.content ?: "",
-                        onClick = { onNavigateToChat(character.id) }
+                        onClick = { onNavigateToChat(character.id) },
+                        onLongClick = { onNavigateToEditor(character.id) }
                     )
                 }
             }
@@ -432,13 +460,22 @@ private fun ChatBubble(message: ChatMessage) {
 private fun CharacterCardItem(
     character: CharacterCard,
     lastMessage: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null
 ) {
+    val baseModifier = Modifier
+        .fillMaxWidth()
+        .padding(horizontal = 16.dp, vertical = 4.dp)
+    val interactiveModifier = if (onLongClick != null) {
+        baseModifier.combinedClickable(
+            onClick = onClick,
+            onLongClick = onLongClick
+        )
+    } else {
+        baseModifier.clickable(onClick = onClick)
+    }
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 4.dp),
+        modifier = interactiveModifier,
         shape = RoundedCornerShape(12.dp)
     ) {
         Row(

@@ -20,6 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import app.newdream.NewDreamApp
+import app.newdream.data.model.World
 import app.newdream.ui.theme.*
 
 data class HomeFeature(
@@ -47,6 +49,10 @@ val homeFeatures = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(onNavigate: (String) -> Unit) {
+    val settings = NewDreamApp.instance.settings
+    val worlds by settings.worlds.collectAsState(initial = emptyList())
+    val characters by settings.characters.collectAsState(initial = emptyList())
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -135,7 +141,7 @@ fun HomeScreen(onNavigate: (String) -> Unit) {
 
             Spacer(Modifier.height(20.dp))
 
-            // Quick Reading (from sample worlds)
+            // Quick Reading (real data from worlds)
             Text(
                 text = "继续阅读",
                 style = MaterialTheme.typography.titleSmall,
@@ -145,18 +151,14 @@ fun HomeScreen(onNavigate: (String) -> Unit) {
             )
 
             // Horizontally scrollable reading list
-            val sampleBooks = listOf(
-                BookSnippet("织星人 Aria", "软科幻 · 暗夜", 0.33f),
-                BookSnippet("无名小镇的雨", "现实 · 治愈", 0.67f),
-                BookSnippet("最后的占卜师", "奇幻 · 末日", 0.28f),
-                BookSnippet("潮汐手账", "海岸 · 慢生活", 0.42f),
-            )
+            val readingList = worlds.filter { it.readProgress > 0f }
+                .ifEmpty { worlds.take(4) }
 
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(sampleBooks) { book ->
-                    BookCard(book, onClick = { onNavigate("reader/${book.name}") })
+                items(readingList) { world ->
+                    BookCard(world, onClick = { onNavigate("reader/${world.id}") })
                 }
             }
 
@@ -234,7 +236,7 @@ private data class BookSnippet(
 )
 
 @Composable
-private fun BookCard(book: BookSnippet, onClick: () -> Unit) {
+private fun BookCard(world: World, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .width(140.dp)
@@ -263,14 +265,14 @@ private fun BookCard(book: BookSnippet, onClick: () -> Unit) {
             }
             Spacer(Modifier.height(8.dp))
             Text(
-                text = book.name,
+                text = world.name,
                 style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.Medium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = book.vibe,
+                text = world.vibe.ifBlank { world.category },
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
@@ -278,7 +280,7 @@ private fun BookCard(book: BookSnippet, onClick: () -> Unit) {
             )
             Spacer(Modifier.height(6.dp))
             LinearProgressIndicator(
-                progress = { book.progress },
+                progress = { world.readProgress.coerceIn(0f, 1f) },
                 modifier = Modifier.fillMaxWidth().height(3.dp),
                 color = MaterialTheme.colorScheme.primary,
                 trackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)

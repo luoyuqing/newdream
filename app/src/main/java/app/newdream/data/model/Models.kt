@@ -148,6 +148,89 @@ data class ReadingProgress(
     val updatedAt: Long = System.currentTimeMillis()
 )
 
+/**
+ * World/BookShelf model - matches the sample_worlds_v12.json structure.
+ * Represents a novel/story in the library with metadata, branching structure,
+ * and reading progress.
+ */
+@Serializable
+data class World(
+    val id: String,
+    val name: String,
+    val author: String = "",
+    val vibe: String = "",
+    val category: String = "",
+    val branchTotal: Int = 0,
+    val branchDraft: Int = 0,
+    val wordCount: Int = 0,
+    val rating: Float = 0f,
+    val tagline: String = "",
+    val coverImage: String = "",
+    val readProgress: Float = 0f,
+    val lastReadAgo: String = "",
+    val badge: String? = null,
+    val isFeatured: Boolean = false,
+    val tags: List<String> = emptyList(),
+    val chapters: List<WorldChapter> = emptyList(),
+    val createdAt: Long = System.currentTimeMillis()
+)
+
+@Serializable
+data class WorldChapter(
+    val index: Int,
+    val title: String,
+    val content: String = "",
+    val wordCount: Int = 0,
+    val isDraft: Boolean = false,
+    val branches: List<BranchOption> = emptyList()
+)
+
+@Serializable
+data class BranchOption(
+    val id: String,
+    val title: String,
+    val targetChapterIndex: Int,
+    val condition: String = ""
+)
+
+/**
+ * Bundled asset manifest loaded from sample_worlds_v12.json
+ */
+@Serializable
+data class SampleWorldsBundle(
+    val tokens: Map<String, String> = emptyMap(),
+    val categories: List<String> = emptyList(),
+    val worlds: List<World> = emptyList()
+)
+
+/**
+ * Populate a sample world with starter chapter content.
+ * Public so the Application can initialize worlds on startup.
+ */
+fun populateFromSample(world: World): World {
+    val sampleChapter = WorldChapter(
+        index = 0,
+        title = "开篇",
+        content = buildString {
+            appendLine("${world.name} - ${world.author}")
+            appendLine()
+            appendLine("${world.vibe} - ${world.category}")
+            appendLine()
+            appendLine(world.tagline)
+            appendLine()
+            appendLine("这是《${world.name}》的开篇章节。点击右上角的 AI 续写按钮可以让 AI 帮你续写正文，支持多分支叙事与世界观延续。")
+            appendLine()
+            appendLine("当前共规划 ${world.branchTotal} 章，已完成 ${world.branchDraft} 章。")
+            appendLine()
+            append("本章节约 ${world.wordCount} 字。")
+        },
+        wordCount = 280,
+        isDraft = world.branchDraft == 0,
+        branches = emptyList()
+    )
+    return world.copy(chapters = listOf(sampleChapter))
+}
+
 // ============= Companion Models =============
 
 @Serializable
@@ -184,23 +267,46 @@ enum class MemoryCategory { GENERAL, IMPORTANT, EMOTIONAL, DAILY }
 data class VNScript(
     val id: String,
     val title: String,
+    val description: String = "",
     val source: VNSource,
     val sourceId: String = "",        // bookId or chatSessionId
     val scenes: List<VNScene> = emptyList(),
     val characters: List<VNCharacter> = emptyList(),
-    val currentSceneIndex: Int = 0
+    val variables: List<VNVariable> = emptyList(),
+    val currentSceneIndex: Int = 0,
+    val createdAt: Long = System.currentTimeMillis()
 )
 
 @Serializable
 enum class VNSource { FROM_BOOK, FROM_CHAT, ORIGINAL }
 
 @Serializable
+data class VNVariable(
+    val key: String,
+    val initialValue: Int = 0,
+    val min: Int = 0,
+    val max: Int = 100
+)
+
+@Serializable
+data class VNSaveState(
+    val scriptId: String,
+    val sceneIndex: Int,
+    val variables: Map<String, Int> = emptyMap(),
+    val history: List<String> = emptyList(),
+    val savedAt: Long = System.currentTimeMillis()
+)
+
+@Serializable
 data class VNScene(
     val index: Int,
+    val title: String = "",
     val background: String = "",
     val dialogues: List<VNDialogue> = emptyList(),
     val choices: List<VNChoice> = emptyList(),
-    val narration: String = ""
+    val narration: String = "",
+    val autoConditions: List<VNCondition> = emptyList(),
+    val onEnter: List<VNAction> = emptyList()
 )
 
 @Serializable
@@ -214,9 +320,28 @@ data class VNDialogue(
 
 @Serializable
 data class VNChoice(
+    val id: String = "",
     val text: String,
     val targetSceneIndex: Int,
-    val condition: String = ""
+    val condition: String = "",
+    val effects: List<VNAction> = emptyList(),
+    val enabled: Boolean = true
+)
+
+@Serializable
+data class VNCondition(
+    val type: String,       // "var", "visited", "random"
+    val key: String = "",
+    val operator: String = "",  // ">", "<", "==", "!=", ">=", "<="
+    val value: Int = 0
+)
+
+@Serializable
+data class VNAction(
+    val type: String,       // "set", "inc", "dec", "goto"
+    val key: String = "",
+    val value: Int = 0,
+    val target: Int = -1
 )
 
 @Serializable
@@ -343,6 +468,9 @@ sealed class Screen(val route: String) {
     data object ChatSession : Screen("chat/{characterId}") {
         fun createRoute(characterId: String) = "chat/$characterId"
     }
+    data object ChatEditor : Screen("chat/editor/{characterId}") {
+        fun createRoute(characterId: String?) = "chat/editor/${characterId ?: "new"}"
+    }
     data object Companion : Screen("companion")
     data object CompanionChat : Screen("companion/{companionId}") {
         fun createRoute(companionId: String) = "companion/$companionId"
@@ -350,6 +478,9 @@ sealed class Screen(val route: String) {
     data object VN : Screen("vn")
     data object VNPlayer : Screen("vn/{scriptId}") {
         fun createRoute(scriptId: String) = "vn/$scriptId"
+    }
+    data object VNEditor : Screen("vn/editor/{scriptId}") {
+        fun createRoute(scriptId: String?) = "vn/editor/${scriptId ?: "new"}"
     }
     data object Agent : Screen("agent")
     data object Settings : Screen("settings")

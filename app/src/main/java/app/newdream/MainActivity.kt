@@ -25,6 +25,7 @@ import app.newdream.data.model.Screen
 import app.newdream.ui.screens.agent.AgentScreen
 import app.newdream.ui.screens.chat.ChatListScreen
 import app.newdream.ui.screens.chat.ChatScreen
+import app.newdream.ui.screens.chat.CharacterCardEditorScreen
 import app.newdream.ui.screens.companion.CompanionDetailScreen
 import app.newdream.ui.screens.companion.CompanionListScreen
 import app.newdream.ui.screens.home.HomeScreen
@@ -138,9 +139,14 @@ fun MainScreen() {
             }
 
             composable(Screen.Chat.route) {
-                ChatListScreen { characterId ->
-                    navController.navigate(Screen.ChatSession.createRoute(characterId))
-                }
+                ChatListScreen(
+                    onNavigateToChat = { characterId ->
+                        navController.navigate(Screen.ChatSession.createRoute(characterId))
+                    },
+                    onNavigateToEditor = { characterId ->
+                        navController.navigate(Screen.ChatEditor.createRoute(characterId))
+                    }
+                )
             }
 
             composable(
@@ -151,6 +157,24 @@ fun MainScreen() {
                 ChatScreen(
                     characterId = characterId,
                     onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(
+                route = Screen.ChatEditor.route,
+                arguments = listOf(navArgument("characterId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val rawId = backStackEntry.arguments?.getString("characterId") ?: "new"
+                val settings = app.newdream.NewDreamApp.instance.settings
+                val characters by settings.characters.collectAsState(initial = emptyList())
+                val existing = if (rawId != "new") characters.find { it.id == rawId } else null
+
+                CharacterCardEditorScreen(
+                    existing = existing,
+                    onBack = { navController.popBackStack() },
+                    onSaved = { _ ->
+                        navController.popBackStack()
+                    }
                 )
             }
 

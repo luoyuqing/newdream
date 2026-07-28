@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
@@ -58,6 +59,41 @@ class AppSettings(private val context: Context) {
         context.dataStore.edit { it[READING_PROGRESS_JSON] = json.encodeToString(progress) }
     }
 
+    suspend fun updateReadingProgress(progress: ReadingProgress) {
+        val current = readingProgress.first().toMutableList()
+        val existingIdx = current.indexOfFirst { it.bookId == progress.bookId }
+        if (existingIdx >= 0) {
+            current[existingIdx] = progress
+        } else {
+            current.add(progress)
+        }
+        saveReadingProgress(current)
+    }
+
+    // ===== Worlds / Library =====
+    val worlds: Flow<List<World>> = context.dataStore.data.map { prefs ->
+        val raw = prefs[WORLDS_JSON] ?: "[]"
+        try { json.decodeFromString(raw) } catch (e: Exception) { emptyList() }
+    }
+
+    suspend fun saveWorlds(worlds: List<World>) {
+        context.dataStore.edit { it[WORLDS_JSON] = json.encodeToString(worlds) }
+    }
+
+    suspend fun saveWorld(world: World) {
+        val current = worlds.first().toMutableList()
+        val idx = current.indexOfFirst { it.id == world.id }
+        if (idx >= 0) current[idx] = world else current.add(world)
+        saveWorlds(current)
+    }
+
+    suspend fun initializeWorldsIfEmpty(defaultWorlds: List<World>) {
+        val current = worlds.first()
+        if (current.isEmpty()) {
+            saveWorlds(defaultWorlds)
+        }
+    }
+
     // ===== Chat Sessions =====
     suspend fun saveChatSessions(sessions: List<ChatSession>) {
         context.dataStore.edit { it[CHAT_SESSIONS_JSON] = json.encodeToString(sessions) }
@@ -98,15 +134,46 @@ class AppSettings(private val context: Context) {
         context.dataStore.edit { it[AGENT_ACTIONS_JSON] = json.encodeToString(actions) }
     }
 
+    // ===== VN Scripts =====
+    val vnScripts: Flow<List<VNScript>> = context.dataStore.data.map { prefs ->
+        val raw = prefs[VN_SCRIPTS_JSON] ?: "[]"
+        try { json.decodeFromString(raw) } catch (e: Exception) { emptyList() }
+    }
+
+    suspend fun saveVNScripts(scripts: List<VNScript>) {
+        context.dataStore.edit { it[VN_SCRIPTS_JSON] = json.encodeToString(scripts) }
+    }
+
+    suspend fun saveVNScript(script: VNScript) {
+        val current = vnScripts.first().toMutableList()
+        val idx = current.indexOfFirst { it.id == script.id }
+        if (idx >= 0) current[idx] = script else current.add(script)
+        saveVNScripts(current)
+    }
+
+    suspend fun initializeVNIfEmpty(defaultScripts: List<VNScript>) {
+        val current = vnScripts.first()
+        if (current.isEmpty()) {
+            saveVNScripts(defaultScripts)
+        }
+    }
+
+    suspend fun deleteVNScript(id: String) {
+        val current = vnScripts.first().filter { it.id != id }
+        saveVNScripts(current)
+    }
+
     companion object {
         private val DARK_MODE = booleanPreferencesKey("dark_mode")
         private val DEFAULT_CHAT_MODEL = stringPreferencesKey("default_chat_model")
         private val PROVIDERS_JSON = stringPreferencesKey("providers_json")
         private val CHARACTERS_JSON = stringPreferencesKey("characters_json")
         private val READING_PROGRESS_JSON = stringPreferencesKey("reading_progress_json")
+        private val WORLDS_JSON = stringPreferencesKey("worlds_json")
         private val CHAT_SESSIONS_JSON = stringPreferencesKey("chat_sessions_json")
         private val COMPANIONS_JSON = stringPreferencesKey("companions_json")
         private val LOREBOOKS_JSON = stringPreferencesKey("lorebooks_json")
         private val AGENT_ACTIONS_JSON = stringPreferencesKey("agent_actions_json")
+        private val VN_SCRIPTS_JSON = stringPreferencesKey("vn_scripts_json")
     }
 }
